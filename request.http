@@ -1,0 +1,58 @@
+###
+GET http://localhost:8080/leaderboard
+
+###
+GET http://localhost:8080/current_games
+
+###
+POST http://localhost:8080/create_session
+
+###
+POST http://localhost:8080/play
+Content-Type: application/json
+
+{
+		"session_id":1,
+		"player_name":"andrey",
+		"choice":"rock"
+}
+
+###
+POST http://localhost:8080/play
+Content-Type: application/json
+
+{
+		"session_id":1,
+		"player_name":"kirill",
+		"choice":"paper"
+}
+
+###
+POST http://localhost:8080/play
+Content-Type: application/json
+
+{
+		"session_id":1,
+		"player_name":"andrey",
+		"choice":"rock"
+}
+
+
+###
+POST http://localhost:8080/join_session
+Content-Type: application/json
+
+{
+		"session_id":1,
+		"player_name":"kirill"
+}
+
+
+###
+POST http://localhost:8080/join_session
+Content-Type: application/json
+
+{
+		"session_id":1,
+		"player_name":"andrey"
+}
