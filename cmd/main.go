@@ -1,10 +1,15 @@
 package main
 
 import (
+	//"log"
 	"strings"
 	"sync"
 
+	_ "api-rock-paper-scissors/docs"
+
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type Player struct {
@@ -23,6 +28,20 @@ type Session struct {
 	Round   int
 	Score   Scores
 	mu      sync.Mutex
+}
+
+// SuccessResponse represents the successful response format
+type SuccessResponse struct {
+	SessionID int `json:"session_id"`
+}
+
+// ErrorResponse представляет собой структуру для ошибочных ответов API.
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
+
+type PlayResponse struct {
+	GameResult string `json:"game_result" example:"Win 1 player"`
 }
 
 const MAX_ROUND_FILTER = 3
@@ -53,6 +72,14 @@ func getResult(player_1 string, player_2 string) int {
 	}
 }
 
+// @Description Создание новой игровой сессии
+// @Tags Session
+// @Accept json
+// @Produce json
+// @Summary Создание игровой сессии
+// @Produce json
+// @Success 200 {object} SuccessResponse "Successful response with session ID"
+// @Router /create_session [post]
 func createSession(c *gin.Context) {
 	sessionID := ID
 	ID++
@@ -67,6 +94,16 @@ func createSession(c *gin.Context) {
 
 }
 
+// @Description Присоединение к игровой сессии
+// @Tags Session
+// @Accept json
+// @Produce json
+// @Summary Присоединение к игровой сессии
+// @Param session_id path int true "ID игровой сессии"
+// @Param player_name path string true "Имя игрока"
+// @Success 200 {object} SuccessResponse "Игрок успешно присоединился к сессии"
+// @Failure 400 {object} ErrorResponse "Некорректный запрос или неверный ID сессии"
+// @Router /join_session [post]
 func joinSession(c *gin.Context) {
 	var json struct {
 		SessionID  int    `json:"session_id"`
@@ -101,14 +138,37 @@ func joinSession(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "Player joined the session"})
 }
 
+// @Summary Получить текущий рейтинг игроков
+// @Description Возвращает рейтинг игроков в текущих игровых сессиях.
+// @Tags Session
+// @Produce json
+// @Success 200 {object} map[string]int "map[имя_игрока:количество_побед]"
+// @Router /leaderboard [get]
 func getLeaderboard(c *gin.Context) {
 	c.JSON(200, leaderboard)
 }
 
+// @Summary Получить список текущих игровых сессий
+// @Description Возвращает список текущих игровых сессий, включая информацию о каждой сессии.
+// @Tags Session
+// @Produce json
+// @Success 200 {array} Session "Массив сессий"
+// @Router /current_games [get]
 func getCurrentGames(c *gin.Context) {
 	c.JSON(200, gin.H{"current_games": sessions})
 }
 
+// @Summary Играть в рок-ножницы-бумага
+// @Description Производит игровой ход в рамках сессии, включая выбор игрока и определение победителя в раунде.
+// @Tags Session
+// @Accept json
+// @Produce json
+// @Param session_id path int true "Идентификатор игровой сессии"
+// @Param player_name path string true "Имя игрока"
+// @Param choice path string true "Выбор игрока (rock, paper, scissors)"
+// @Success 200 {object} PlayResponse "Результат игры"
+// @Failure 400 {object} ErrorResponse "Некорректный запрос или неверный идентификатор сессии"
+// @Router /play [post]
 func play(c *gin.Context) {
 	var json struct {
 		SessionID  int    `json:"session_id"`
@@ -143,7 +203,7 @@ func play(c *gin.Context) {
 
 	var counter_answer int = 0 // Кол-во ответов
 
-	for i, _ := range sessions[ID].Players { // Подсчет количества ответов от игроков
+	for i := range sessions[ID].Players { // Подсчет количества ответов от игроков
 		if sessions[ID].Players[i].Choice != "" {
 			counter_answer++
 		}
@@ -201,5 +261,8 @@ func main() {
 	r.GET("/current_games", getCurrentGames)
 	r.POST("/play", play)
 
-	r.Run(":8080")
+	// Маршрут для Swagger UI
+	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	r.Run(":8000")
 }
