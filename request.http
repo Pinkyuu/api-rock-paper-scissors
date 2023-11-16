@@ -43,7 +43,7 @@ POST http://localhost:8000/join_session
 Content-Type: application/json
 
 {
-		"session_id":1,
+		"session_id":4,
 		"player_name":"kirill"
 }
 
@@ -53,6 +53,6 @@ POST http://localhost:8000/join_session
 Content-Type: application/json
 
 {
-		"session_id":1,
+		"session_id":2,
 		"player_name":"andrey"
 }
