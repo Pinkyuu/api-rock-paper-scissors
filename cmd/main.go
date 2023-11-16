@@ -2,12 +2,14 @@ package main
 
 import (
 	//"log"
+	"context"
 	"strings"
 	"sync"
 
 	_ "api-rock-paper-scissors/docs"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v4"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -30,6 +32,11 @@ type Session struct {
 	mu      sync.Mutex
 }
 
+type Leaderboard struct {
+	Name  string
+	Score int
+}
+
 // SuccessResponse represents the successful response format
 type SuccessResponse struct {
 	SessionID int `json:"session_id"`
@@ -44,12 +51,76 @@ type PlayResponse struct {
 	GameResult string `json:"game_result" example:"Win 1 player"`
 }
 
+func getDBConnection() (*pgx.Conn, error) {
+	config, err := pgx.ParseConfig("postgres://postgres:123@localhost/api")
+	if err != nil {
+		return nil, err
+	}
+	conn, err := pgx.ConnectConfig(context.Background(), config)
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
+}
+
+func closeDBConnection(conn *pgx.Conn) {
+	conn.Close(context.Background())
+}
+
+func PostLeaderBoard(name string) error {
+
+	conn, err := getDBConnection()
+	if err != nil {
+		panic(err)
+	}
+	defer closeDBConnection(conn)
+
+	sqlupdate := `UPDATE leaderboard set score = score + $1 where name = $2`
+	sqlinsert := `INSERT INTO leaderboard (score, name) VALUES ($1, $2)`
+	println(name)
+	_, err = conn.Exec(context.Background(), sqlupdate, 1, name)
+	if err != nil {
+		_, err = conn.Exec(context.Background(), sqlinsert, 1, name)
+	}
+	return err
+
+}
+
+func GetLeaderBoard() []Leaderboard {
+
+	var leaderboard = []Leaderboard{}
+	conn, err := getDBConnection()
+	if err != nil {
+		panic(err)
+	}
+	defer closeDBConnection(conn)
+
+	sql := `SELECT name, score FROM leaderboard`
+
+	var p Leaderboard
+
+	rows, err := conn.Query(context.Background(), sql)
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		err = rows.Scan(&p.Name, &p.Score)
+		if err != nil {
+			panic(err)
+		}
+		leaderboard = append(leaderboard, p)
+	}
+	return leaderboard
+
+}
+
 const MAX_ROUND_FILTER = 3
 
 var ID = 1
 
 var sessions []*Session
-var leaderboard map[string]int
 
 func findArrID(ID int) int { // Поиск игры по ID
 	for i, session := range sessions {
@@ -126,7 +197,7 @@ func joinSession(c *gin.Context) {
 		return
 	}
 
-	session := sessions[json.SessionID-1]
+	session := sessions[ID]
 	session.mu.Lock()
 	defer session.mu.Unlock()
 
@@ -145,7 +216,7 @@ func joinSession(c *gin.Context) {
 // @Success 200 {object} map[string]int "map[имя_игрока:количество_побед]"
 // @Router /leaderboard [get]
 func getLeaderboard(c *gin.Context) {
-	c.JSON(200, leaderboard)
+	c.JSON(200, GetLeaderBoard())
 }
 
 // @Summary Получить список текущих игровых сессий
@@ -236,15 +307,9 @@ func play(c *gin.Context) {
 
 	if sessions[ID].Round > MAX_ROUND_FILTER {
 		if sessions[ID].Score.player_1 > sessions[ID].Score.player_2 {
-			if leaderboard == nil {
-				leaderboard = make(map[string]int)
-			}
-			leaderboard[sessions[ID].Players[0].Name]++
+			PostLeaderBoard(sessions[ID].Players[0].Name)
 		} else {
-			if leaderboard == nil {
-				leaderboard = make(map[string]int)
-			}
-			leaderboard[sessions[ID].Players[1].Name]++
+			PostLeaderBoard(sessions[ID].Players[1].Name)
 		}
 
 		sessions = append(sessions[:json.SessionID-1], sessions[json.SessionID:]...)
