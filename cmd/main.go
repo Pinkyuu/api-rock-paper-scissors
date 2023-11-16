@@ -191,7 +191,7 @@ func play(c *gin.Context) {
 		return
 	}
 
-	session := sessions[json.SessionID-1]
+	session := sessions[ID]
 	session.mu.Lock()
 	defer session.mu.Unlock()
 
