@@ -3,6 +3,7 @@ package main
 import (
 	//"log"
 	"context"
+	"log"
 	"strings"
 	"sync"
 
@@ -14,6 +15,9 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// @title WhoManages API
+// @version 1.0
+// @host localhost:8000
 type Player struct {
 	Name   string
 	Choice string
@@ -145,7 +149,6 @@ func getResult(player_1 string, player_2 string) int {
 
 // @Description Создание новой игровой сессии
 // @Tags Session
-// @Accept json
 // @Produce json
 // @Summary Создание игровой сессии
 // @Produce json
@@ -167,13 +170,11 @@ func createSession(c *gin.Context) {
 
 // @Description Присоединение к игровой сессии
 // @Tags Session
-// @Accept json
-// @Produce json
+// @Produce aplication/json
 // @Summary Присоединение к игровой сессии
 // @Param session_id path int true "ID игровой сессии"
 // @Param player_name path string true "Имя игрока"
 // @Success 200 {object} SuccessResponse "Игрок успешно присоединился к сессии"
-// @Failure 400 {object} ErrorResponse "Некорректный запрос или неверный ID сессии"
 // @Router /join_session [post]
 func joinSession(c *gin.Context) {
 	var json struct {
@@ -181,6 +182,7 @@ func joinSession(c *gin.Context) {
 		PlayerName string `json:"player_name"`
 	}
 	if err := c.ShouldBindJSON(&json); err != nil {
+		log.Println("Error binding JSON:", err)
 		c.JSON(400, gin.H{"error": "Invalid request"})
 		return
 	}
@@ -232,13 +234,11 @@ func getCurrentGames(c *gin.Context) {
 // @Summary Играть в рок-ножницы-бумага
 // @Description Производит игровой ход в рамках сессии, включая выбор игрока и определение победителя в раунде.
 // @Tags Session
-// @Accept json
 // @Produce json
 // @Param session_id path int true "Идентификатор игровой сессии"
 // @Param player_name path string true "Имя игрока"
 // @Param choice path string true "Выбор игрока (rock, paper, scissors)"
 // @Success 200 {object} PlayResponse "Результат игры"
-// @Failure 400 {object} ErrorResponse "Некорректный запрос или неверный идентификатор сессии"
 // @Router /play [post]
 func play(c *gin.Context) {
 	var json struct {

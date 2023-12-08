@@ -18,9 +18,6 @@ const docTemplate = `{
         "/create_session": {
             "post": {
                 "description": "Создание новой игровой сессии",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json",
                     "application/json"
@@ -65,11 +62,8 @@ const docTemplate = `{
         "/join_session": {
             "post": {
                 "description": "Присоединение к игровой сессии",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
-                    "application/json"
+                    "aplication/json"
                 ],
                 "tags": [
                     "Session"
@@ -96,12 +90,6 @@ const docTemplate = `{
                         "description": "Игрок успешно присоединился к сессии",
                         "schema": {
                             "$ref": "#/definitions/main.SuccessResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Некорректный запрос или неверный ID сессии",
-                        "schema": {
-                            "$ref": "#/definitions/main.ErrorResponse"
                         }
                     }
                 }
@@ -133,9 +121,6 @@ const docTemplate = `{
         "/play": {
             "post": {
                 "description": "Производит игровой ход в рамках сессии, включая выбор игрока и определение победителя в раунде.",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -172,26 +157,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/main.PlayResponse"
                         }
-                    },
-                    "400": {
-                        "description": "Некорректный запрос или неверный идентификатор сессии",
-                        "schema": {
-                            "$ref": "#/definitions/main.ErrorResponse"
-                        }
                     }
                 }
             }
         }
     },
     "definitions": {
-        "main.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                }
-            }
-        },
         "main.PlayResponse": {
             "type": "object",
             "properties": {
@@ -248,11 +219,11 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
+	Version:          "1.0",
+	Host:             "localhost:8000",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "",
+	Title:            "WhoManages API",
 	Description:      "",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,

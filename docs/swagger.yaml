@@ -1,9 +1,4 @@
 definitions:
-  main.ErrorResponse:
-    properties:
-      error:
-        type: string
-    type: object
   main.PlayResponse:
     properties:
       game_result:
@@ -37,13 +32,14 @@ definitions:
       session_id:
         type: integer
     type: object
+host: localhost:8000
 info:
   contact: {}
+  title: WhoManages API
+  version: "1.0"
 paths:
   /create_session:
     post:
-      consumes:
-      - application/json
       description: Создание новой игровой сессии
       produces:
       - application/json
@@ -74,8 +70,6 @@ paths:
       - Session
   /join_session:
     post:
-      consumes:
-      - application/json
       description: Присоединение к игровой сессии
       parameters:
       - description: ID игровой сессии
@@ -89,16 +83,12 @@ paths:
         required: true
         type: string
       produces:
-      - application/json
+      - aplication/json
       responses:
         "200":
           description: Игрок успешно присоединился к сессии
           schema:
             $ref: '#/definitions/main.SuccessResponse'
-        "400":
-          description: Некорректный запрос или неверный ID сессии
-          schema:
-            $ref: '#/definitions/main.ErrorResponse'
       summary: Присоединение к игровой сессии
       tags:
       - Session
@@ -119,8 +109,6 @@ paths:
       - Session
   /play:
     post:
-      consumes:
-      - application/json
       description: Производит игровой ход в рамках сессии, включая выбор игрока и
         определение победителя в раунде.
       parameters:
@@ -146,10 +134,6 @@ paths:
           description: Результат игры
           schema:
             $ref: '#/definitions/main.PlayResponse'
-        "400":
-          description: Некорректный запрос или неверный идентификатор сессии
-          schema:
-            $ref: '#/definitions/main.ErrorResponse'
       summary: Играть в рок-ножницы-бумага
       tags:
       - Session
